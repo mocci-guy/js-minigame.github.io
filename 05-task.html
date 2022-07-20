@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Task 05</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        .container{
+            display: flex;
+            flex-direction: column;
+            margin: 0 auto;
+            width: fit-content;
+        }
+        
+        div h1, h3{
+            margin: 10px auto;
+
+        }
+
+        div button, input{
+            width: 250px;
+            margin: 5px auto;
+        }
+        
+        div i{
+           font-weight: 600; 
+           font-size: 1.5rem;
+           color:rgb(255, 68, 68);
+        }
+        div .log-element{
+            padding: 5px;
+        }
+
+        .log{
+            padding-top: 15px;
+        }
+
+        fieldset{
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h1>Игра "Угадай число"</h1>
+        <h3>Суть игры - угадать за меньшее количество попыток число от 0 до 100, которое загадал сценарий.</h3>
+        <button class="start-game">Начать игру!</button>
+        <input type="number" min="0" max="100" placeholder="Введите число" disabled="true">
+        <i class="output"></i>
+        <div class="log">
+
+        </div>
+    </div>
+
+    <template id="log-template">
+        <fieldset class="log-element">
+                <legend>Попытка {{attempt}}</legend>
+                Пользователь: {{number}} <br>
+                Сценарий: я загадал значение {{higherOrLower}}, чем {{number}} <br>
+        </fieldset>
+    </template>
+
+    <script src="mustache.min.js"></script>
+    <script>
+        /*
+        Задание:
+        Напишите сценарии "Игра 'Угадай число'". Суть игры - угадать за меньшее количество попыток число, которое загадал сценарий.
+        Каждый раз, когда игрок пытается угадать число, сценарий выводит подсказку - меньшее или большее число было загадано сценарием.
+        Сценарий загадывает число только один раз в начале игры и это число не меняется до завершения игры.
+        При завершении игры выведите пользователю информацию о том, с какой попытки угадано значение и сколько было потрачено на это времени.
+
+        Для генерации случайного числа используйте следующий код:
+        let randomValue = Math.floor(Math.random() * 101); // случайное значение от 0 до 100 будет записано в переменную randomValue
+        
+        Пример игры:
+        Сценарий: я загадал случайное значение от 0 до 100
+        Пользователь: 50
+        Сценарий: я загадал значение больше, чем 50
+        Пользователь: 75
+        Сценарий: я загадал значение меньше, чем 75
+        Пользователь: 62
+        Сценарий: я загадал значение меньше, чем 62
+        Пользователь: 56
+        Сценарий: Правильно! Загаданное значение 56. Вы угадали с 4й попытки за 10 сек.
+        */
+
+        let btnStartGame = document.querySelector("button");
+        let input = document.querySelector("input");
+        let output = document.querySelector(".output");
+        let log = document.querySelector(".log");
+        let logTemplate = document.querySelector("template").innerHTML;
+        
+        let randomValue = 0;
+        let time = 0;
+        let attemptCount = 0;
+        let timerID = 0;
+
+        btnStartGame.addEventListener("click", () => {
+            randomValue = btnHandler();
+            input.value = "";
+            output.value = "";
+            log.value = "";
+            btnStartGame.textContent = "Начать сначала";
+            console.log(randomValue);
+        });
+
+        input.addEventListener("keydown", function(e) {
+            if (e.key == "Enter"){
+                attemptCount++;
+                let attempt = new GameAttempt(Number(input.value), randomValue, time, logTemplate, attemptCount, output);
+                attempt.validation();
+                input.value = "";
+                if (output.innerHTML) {
+                    clearInterval(timerID);
+                }
+            }            
+        });
+
+
+        function btnHandler(){
+            timerID = 0;
+            time = 0;
+            timerID = setInterval(() => time++ ,1000);
+
+            let randomValue = Math.floor(Math.random() * 101);
+            alert("Я загадал число от 1 до 100");
+            input.disabled = false;
+
+            return(randomValue);
+        }
+
+
+        class GameAttempt{
+            constructor(number, randomNumber, time, template, attempt, output){
+                this.number = number             // Number(input.value)
+                this.randomNumber = randomNumber;
+                this.time = time;
+                this.template = template;
+                this.higherOrLower = undefined;
+                this.attempt = attempt;
+                this.output = output;
+            }
+
+         
+
+            validation(){
+                if (this.number < this.randomNumber) {
+                    this.higherOrLower = "больше";
+                    this.render();
+                } else if (this.number > this.randomNumber){
+                    this.higherOrLower = "меньше";
+                    this.render();
+                } else if (this.number == this.randomNumber){
+                    output.innerHTML = `Правильно! Загаданное значение ${this.randomNumber}. Вы угадали с ${this.attempt - 1}й попытки за ${this.time} сек.`;
+                }
+                
+            }
+
+            render(){
+                let html = Mustache.render(this.template, this);
+                output.insertAdjacentHTML("afterend", html);
+            }               
+
+        }
+
+        /*
+        let html = Mustache.render(template, monthData);
+        output.insertAdjacentHTML("beforeend", html);
+        */
+    </script>
+</body>
+
+</html>
